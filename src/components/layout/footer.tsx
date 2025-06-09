@@ -5,7 +5,7 @@ export function Footer() {
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Desarrollado por{' '}
-            <span className="font-semibold text-primary">Grupo KELSOFT</span>
+            <span className="font-semibold text-orange">Grupo KELSOFT</span>
           </p>
         </div>
       </div>

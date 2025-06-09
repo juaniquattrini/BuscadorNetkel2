@@ -12,7 +12,7 @@ export function CountryCard({ country, className }: CountryCardProps) {
     <Link to={`/country/${country.code}`}>
       <div 
         className={cn(
-          "group relative overflow-hidden rounded-lg border bg-card p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105",
+          "group relative overflow-hidden rounded-lg border-2 border-border bg-card p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 hover:border-orange border-l-4 border-l-orange hover:shadow-orange/20",
           className
         )}
       >

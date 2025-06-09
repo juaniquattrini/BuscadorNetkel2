@@ -5,14 +5,12 @@ export function useTheme() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Cargar tema desde localStorage o detectar del sistema
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     
     const initialTheme = savedTheme || systemTheme;
     setTheme(initialTheme);
     
-    // Aplicar clase CSS
     document.documentElement.classList.toggle('dark', initialTheme === 'dark');
     setIsLoading(false);
   }, []);
@@ -22,7 +20,6 @@ export function useTheme() {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     
-    // Aplicar inmediatamente
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
