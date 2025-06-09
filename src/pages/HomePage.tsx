@@ -1,6 +1,6 @@
 import { PageLayout } from '@/components/layout/PageLayout';
 import { CountryCard } from '@/components/ui/CountryCard';
-import { countries } from '@/data/competitors';
+import { countries } from '@/shared/constants/CountryConfig';
 
 export function HomePage() {
   return (

@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Loader2, ExternalLink } from 'lucide-react';
-import { Competitor } from '@/types';
+import { Search, Loader2, ExternalLink, Globe } from 'lucide-react';
 import { GoogleSearchResults } from './GoogleSearchResults';
 import { useMercadoLibreTitle } from '@/hooks/useMercadoLibreTitle';
+import { useMercadoLibreDetection } from '@/hooks/useMercadoLibreDetection';
+
+interface Competitor {
+  name: string;
+  title: string;
+  cx: string;
+  domains?: string[];
+}
 
 interface SearchInterfaceProps {
   competitor: Competitor;
@@ -20,6 +27,18 @@ export function SearchInterface({ competitor, initialQuery = '', onQueryChange }
   const [url, setUrl] = useState('');
   
   const { extractTitle, isLoading: isExtracting } = useMercadoLibreTitle();
+  const { currentUrl, hasExtensionData } = useMercadoLibreDetection();
+
+  // Auto-extraer título si venimos desde la extensión
+  useEffect(() => {
+    if (currentUrl && !query) {
+      extractTitle(currentUrl).then(title => {
+        if (title) {
+          setQuery(title);
+        }
+      }).catch(console.error);
+    }
+  }, [currentUrl, query, extractTitle]);
 
   const handleSearch = () => {
     if (!query.trim()) return;
@@ -44,7 +63,20 @@ export function SearchInterface({ competitor, initialQuery = '', onQueryChange }
 
   return (
     <div className="space-y-6">
-      {isLens && (
+      {hasExtensionData && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Globe className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Detectado desde extensión: {currentUrl}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {(isLens || !hasExtensionData) && (
         <Card>
           <CardContent className="p-4 space-y-4">
             <h3 className="font-medium">Extraer título de MercadoLibre</h3>
@@ -65,7 +97,7 @@ export function SearchInterface({ competitor, initialQuery = '', onQueryChange }
 
       <div className="flex gap-2">
         <Input
-          placeholder="Ingresar MELI_URL o título a buscar"
+          placeholder="Ingresar título a buscar..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
