@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Competitor } from '@/types';
 import { Loader2 } from 'lucide-react';
@@ -9,66 +9,85 @@ interface GoogleSearchResultsProps {
   isLoading: boolean;
 }
 
+declare global {
+  interface Window {
+    google: any;
+    __gcse: any;
+  }
+}
+
 export function GoogleSearchResults({ query, competitor, isLoading }: GoogleSearchResultsProps) {
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   useEffect(() => {
     if (!query || isLoading) return;
 
-    // Limpiar resultados anteriores
-    if (searchContainerRef.current) {
-      searchContainerRef.current.innerHTML = '';
-    }
+    const loadGoogleCSE = () => {
+      // Limpiar contenedor
+      if (searchContainerRef.current) {
+        searchContainerRef.current.innerHTML = '';
+      }
 
-    // Cargar Google Custom Search
-    const loadGoogleSearch = () => {
-      // Eliminar scripts anteriores de Google CSE
-      const existingScripts = document.querySelectorAll('script[src*="cse.google.com"]');
-      existingScripts.forEach(script => script.remove());
-
-      // Crear nuevo elemento de búsqueda
+      // Crear elemento de búsqueda
       const searchElement = document.createElement('div');
       searchElement.className = 'gcse-searchresults-only';
       searchElement.setAttribute('data-cx', competitor.cx);
-      searchElement.setAttribute('data-enable-image-search', 'true');
+      searchElement.setAttribute('data-enableImageSearch', 'true');
       searchElement.setAttribute('data-layout', 'cse-inline');
       
       if (searchContainerRef.current) {
         searchContainerRef.current.appendChild(searchElement);
       }
 
-      // Cargar script de Google CSE
+      // Si ya existe el script, solo reinicializar
+      if (window.google && window.google.search && window.google.search.cse) {
+        window.google.search.cse.element.render({
+          div: searchContainerRef.current,
+          tag: 'searchresults-only'
+        });
+        performSearch();
+        return;
+      }
+
+      // Cargar script si no existe
+      const existingScript = document.querySelector(`script[src*="cse.js"]`);
+      if (existingScript) {
+        existingScript.remove();
+      }
+
       const script = document.createElement('script');
       script.async = true;
       script.src = `https://cse.google.com/cse.js?cx=${competitor.cx}`;
       
       script.onload = () => {
-        // Esperar a que Google CSE se inicialice
-        setTimeout(() => {
-          // Buscar el input de Google y establecer el valor
-          const googleInput = document.querySelector('.gsc-input input') as HTMLInputElement;
-          if (googleInput) {
-            googleInput.value = query;
-            
-            // Disparar la búsqueda
-            const searchButton = document.querySelector('.gsc-search-button input') as HTMLInputElement;
-            if (searchButton) {
-              searchButton.click();
-            }
-          }
-        }, 500);
+        setIsScriptLoaded(true);
+        setTimeout(() => performSearch(), 1000);
       };
 
       document.head.appendChild(script);
     };
 
-    loadGoogleSearch();
-
-    // Cleanup
-    return () => {
-      const scripts = document.querySelectorAll('script[src*="cse.google.com"]');
-      scripts.forEach(script => script.remove());
+    const performSearch = () => {
+      // Buscar input de Google CSE y ejecutar búsqueda
+      setTimeout(() => {
+        const input = document.querySelector('.gsc-input input') as HTMLInputElement;
+        if (input) {
+          input.value = query;
+          const searchButton = document.querySelector('.gsc-search-button input') as HTMLInputElement;
+          if (searchButton) {
+            searchButton.click();
+          } else {
+            // Método alternativo si no hay botón
+            const event = new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 });
+            input.dispatchEvent(event);
+          }
+        }
+      }, 500);
     };
+
+    loadGoogleCSE();
+
   }, [query, competitor.cx, isLoading]);
 
   if (isLoading) {
@@ -86,11 +105,14 @@ export function GoogleSearchResults({ query, competitor, isLoading }: GoogleSear
 
   return (
     <Card>
-      <CardContent className="p-0">
+      <CardContent className="p-4">
+        <div className="mb-4">
+          <h3 className="font-medium">Resultados en {competitor.name}</h3>
+          <p className="text-sm text-muted-foreground">Búsqueda: "{query}"</p>
+        </div>
         <div 
           ref={searchContainerRef}
           className="min-h-[400px] w-full"
-          style={{ display: query ? 'block' : 'none' }}
         />
         {!query && (
           <div className="flex items-center justify-center py-12 text-muted-foreground">

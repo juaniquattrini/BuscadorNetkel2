@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { Header } from './header.tsx';
-import { Breadcrumbs } from '../navigation/Breadcrumbs.ts';
+import { Header } from './header';
+import { Footer } from './Footer';
+import { Breadcrumbs } from './navigation/Breadcrumbs';
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -9,7 +10,7 @@ interface PageLayoutProps {
 
 export function PageLayout({ children, showBreadcrumbs = true }: PageLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       {showBreadcrumbs && (
         <div className="border-b bg-muted/40">
@@ -18,9 +19,10 @@ export function PageLayout({ children, showBreadcrumbs = true }: PageLayoutProps
           </div>
         </div>
       )}
-      <main className="container py-8">
+      <main className="container py-8 flex-1">
         {children}
       </main>
+      <Footer />
     </div>
   );
 }
